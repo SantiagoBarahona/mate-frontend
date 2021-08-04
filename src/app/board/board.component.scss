@@ -1,0 +1,33 @@
+#board{
+
+    width: fit-content;
+    background-color: rgb(111,143,114);
+    display: grid;
+    grid-template-rows: repeat(8, 60px);
+    grid-template-columns: repeat(8, 60px);
+}
+
+
+@media screen and (max-width: 500px) {
+    #board{
+        width: fit-content;
+        background-color: rgb(111,143,114);
+        display: grid;
+        grid-template-rows: repeat(8, fit-content);
+        grid-template-columns: repeat(8, fit-content);
+    }
+    
+        
+  }
+
+  .white{
+      background: #dcdcdc;
+  }
+
+  .black{
+      background-color: #79aec2;
+  }
+
+  .possible-move{
+      background-color: red;
+  }
