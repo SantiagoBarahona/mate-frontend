@@ -6,7 +6,7 @@ import { BoardComponent } from './board.component';
 
 @NgModule({
   declarations: [
-    BoardComponent
+    BoardComponent,
   ],
   imports: [
     CommonModule

@@ -1,1 +1,15 @@
 /* You can add global styles to this file, and also import other style files */
+.flipped{
+    
+    transform: rotate(180deg);
+
+}
+
+.flipped > * {
+    transform:  rotate(180deg);
+}
+
+.possible_move{
+    background: rgba(237,41,59) !important;
+    border: 1px  white solid;
+}

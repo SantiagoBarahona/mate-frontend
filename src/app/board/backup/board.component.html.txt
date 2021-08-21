@@ -1,0 +1,8 @@
+<div id="board">
+    <div *ngFor="let square of board.squares" [class]="square.white ? 'white' : 'black'" (dragover)="handleSquareDragOver($event)"
+        (drop)="handleSquareDrop($event)" [id]="square.index" (click)="handleSquareClick($event)">
+        <label style="position: fixed;">{{square.index}}</label>
+        <img *ngIf="square.hasPiece()" [src]="'/assets/'+square.piece?.id+'.png'" draggable="true" 
+            (dragstart)="handlePieceDragStart($event)" (dragend)="handlePieceDragEnd($event)" (click)="handlePieceClick($event)">
+    </div>
+</div>

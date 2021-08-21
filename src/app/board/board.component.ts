@@ -1,114 +1,98 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { Board } from '../com/engine/board/board';
-import { Role } from '../com/engine/role/role';
+import { Square } from '../com/engine/board/square';
+import { Piece } from '../types/types';
 
 @Component({
   selector: 'app-board',
   templateUrl: './board.component.html',
   styleUrls: ['./board.component.scss']
 })
-export class BoardComponent implements OnInit {
+export class BoardComponent implements AfterViewInit {
 
   board: Board
-  sourceSquare!: HTMLDivElement;
-  targetSquare!: HTMLDivElement;
-  modifiedSquares!: HTMLDivElement[];
-  possibleMoves!: HTMLDivElement[]; 
-  selectedPiece!: HTMLImageElement;
+  squares: HTMLDivElement[] = []
+  SQUARE_MAP: Map<HTMLDivElement, Square> = new Map()
+  modifiedSquares: HTMLDivElement[] = []
+  possibleMoves: any[] = []
+  sourceSq!: Square | null;
+
   constructor() {
-    this.board = new Board();
+    this.board = new Board(true);
   }
 
-  ngOnInit(): void {
-    
+  ngAfterViewInit(): void {
+    for(let i = 0; i < 64; i++){
+      let square = document.getElementById(i+"") as HTMLDivElement;
+      this.squares.push(square)
+      this.SQUARE_MAP.set(square, this.board.squares[i])
+    }
+    this.flipBoard();
+    console.log(this.squares, this.SQUARE_MAP)
   }
 
   cleanSquares(){
-    this.modifiedSquares?.forEach(square => square.classList.remove("possible-move"))
-    this.modifiedSquares = [];
-  }
-  
-  getSquareIndex(square: HTMLDivElement){
-    return Number.parseInt(square.id);
-  }
-  getTargetSquare(event: Event){
-      return ((event.target as HTMLElement).parentElement as HTMLDivElement);
+      this.modifiedSquares?.forEach(square => square.classList.remove("possible_move"))
+      this.modifiedSquares = []
+    
   }
 
-  getTargetSquareIndex(event: Event){
-    return Number.parseInt(((event.target as HTMLElement).parentElement as HTMLDivElement).id);
+  showMoves(e: MouseEvent) {
+    this.cleanSquares()
+    let square = this.SQUARE_MAP.get((e.target as HTMLImageElement).parentElement as HTMLDivElement);
+    this.sourceSq = square!
+    this.board.calculatePieceMoves(square?.index!).then(moves => {
+      if(moves.length == 0) return;
+      let each = moves.split(",")
+      each.forEach(move => {
+        this.possibleMoves = each
+        let sqDiv = document.getElementById(move) as HTMLDivElement
+        sqDiv.classList.add("possible_move")
+        this.modifiedSquares.push(sqDiv)
+      })
+    })
   }
 
-  getTargetPieceRole(square: HTMLDivElement){
-    return 
+
+  squareClick(e: Event){
+        let sq = this.SQUARE_MAP.get(e.target as HTMLDivElement)
+        if(this.sourceSq && this.possibleMoves.includes(sq?.index.toString()) && this.sourceSq.piece?.white == this.board.whiteTurn){
+          this.board.play({
+            type: "normal",
+            capture: false,
+            to: sq!.index,
+            from: this.sourceSq.index,
+            piece: this.sourceSq.piece!,
+            promotion: null
+          })
+          this.cleanSquares();
+          this.possibleMoves = [];
+          this.sourceSq = null
+        }
   }
 
-  getTargetPieceParent(event: MouseEvent){
-    return (event.target as HTMLImageElement).parentElement as HTMLDivElement;
+  pieceClick(e: MouseEvent) {
+    let targetSq = this.SQUARE_MAP.get((e.target as HTMLImageElement).parentElement as HTMLDivElement)
+    if(targetSq?.piece){
+      if(targetSq!.piece.white == this.board.whiteTurn)
+      this.showMoves(e);
+      else if(this.sourceSq && this.sourceSq.piece && this.possibleMoves.includes(targetSq?.index+""))
+        this.board.play({
+          capture: true,
+          from: this.sourceSq.index,
+          to: targetSq.index,
+          piece: this.sourceSq.piece,
+          promotion: null,
+          type: "normal"
+        }).then(()=> {
+          this.cleanSquares();
+        })
+    }
   }
 
   flipBoard(){
-    this.board.squares.reverse();
-  }
-
-  handlePieceDragStart(event: DragEvent){
-    this.sourceSquare = this.getTargetSquare(event);
-    this.showPossibleMoves(this.getTargetSquareIndex(event));
-  }
-  
-  handlePieceDragEnd(event: DragEvent){
-    this.targetSquare = event.target as HTMLDivElement
-  }
-
-  handlePieceClick(event: MouseEvent){
-    this.showPossibleMoves(this.getTargetSquareIndex(event));
-    this.sourceSquare = this.getTargetPieceParent(event)
-  }
-
-  handleSquareClick(event: MouseEvent){
-    let i = event.target as HTMLDivElement;
-    if(this.possibleMoves){
-      if(this.possibleMoves.includes(i)){
-        this.board.play(
-          {
-            from: this.getSquareIndex(this.sourceSquare),
-            to: this.getSquareIndex(i),
-            capture: false,
-            promotion: false,
-            piece: this.board.squares[this.getSquareIndex(i)].piece!,
-           })
-      }
-    }
-  }
-  
-  handleSquareDragOver(event: DragEvent){
-    event.preventDefault();
-  }
-  
-  handleSquareDrop(event: DragEvent){
-    this.targetSquare = event.target as HTMLDivElement;
-    if(!this.possibleMoves.includes(this.targetSquare)) return;
-    if(this.targetSquare.id)
-    console.log(`${this.targetSquare} == ${this.sourceSquare}`, this.targetSquare.parentElement == this.sourceSquare)
-    if(this.targetSquare.parentElement == this.sourceSquare) return;
-    this.targetSquare.innerHTML = event.dataTransfer!.getData('text/html')
-    this.sourceSquare.innerHTML = ''
-    this.sourceSquare = this.targetSquare    
-  }
-
-  showPossibleMoves(index: number){
-    this.cleanSquares();
-    this.possibleMoves = [];
-    this.board.calculatePieceMoves(index).then(squares => {
-      squares.forEach(i => {
-        let square = document.getElementById(i+"") as HTMLDivElement;
-        this.possibleMoves.push(square);
-          square.classList.add("possible-move") 
-          this.modifiedSquares.push(square);
-      })
-    });
+    let board = document.getElementById("board");
+    board?.classList.add('flipped')
   }
   
 }
-
-

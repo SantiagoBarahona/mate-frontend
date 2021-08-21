@@ -1,18 +1,17 @@
-import { Piece } from "src/app/types/types";
-import { Role } from "../role/role";
+import { Piece, Role } from "src/app/types/types";
 
 export class Square{
 
     index: number;
     white: boolean
-    piece?: Piece;
+    piece?: Piece | null;
 
     constructor(index: number, white: boolean){
         this.index = index;
         this.white = white;
     }
 
-    setPiece(role: Role, white: boolean, id: number){
+    setPiece(role: string, white: boolean, id: number){
         this.piece = {role: role, white: white, id: id};
     }
 
@@ -21,7 +20,7 @@ export class Square{
     }
 
     removePiece(){
-        this.piece = undefined;
+        this.piece = null;
     }
 
     hasPiece(): boolean{
